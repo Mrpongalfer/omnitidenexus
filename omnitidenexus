@@ -1,0 +1,42 @@
+#!/bin/bash
+
+# Ensure system is updated
+sudo apt update && sudo apt upgrade -y
+
+# Install Docker, Kubernetes, Git, and required tools
+sudo apt install docker.io docker-compose git -y
+
+# Install Minikube and kubectl for Kubernetes
+curl -Lo minikube https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64
+chmod +x minikube
+sudo mv minikube /usr/local/bin/
+
+# Install kubectl
+sudo apt-get install -y apt-transport-https
+curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add -
+echo "deb https://apt.kubernetes.io/ kubernetes-xenial main" | sudo tee -a /etc/apt/sources.list.d/kubernetes.list
+sudo apt-get update
+sudo apt-get install -y kubectl
+
+# Start Minikube using Docker driver
+minikube start --driver=docker
+
+# Clone the GitHub repository
+git clone https://github.com/mrpongalfer/omnitidenexus.git
+cd omnitidenexus
+
+# Build Docker images for Omnitide Core and Mr. Meeseeks
+cd core
+docker build -t your-dockerhub-image/omnitide-core:latest .
+
+cd ../mr-meeseeks
+docker build -t your-dockerhub-image/mr-meeseeks:latest .
+
+# Deploy to Kubernetes
+kubectl create namespace omnitidenexus
+kubectl apply -f ../k8s/omnitide-deployment.yaml --namespace=omnitidenexus
+kubectl apply -f ../k8s/autoscaler.yaml --namespace=omnitidenexus
+
+# Start Prometheus and Grafana using Docker Compose
+cd ..
+docker-compose up -d
