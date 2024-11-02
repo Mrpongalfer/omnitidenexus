@@ -1,0 +1,20 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: omnitide-deployment
+  namespace: omnitidenexus
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: omnitidenexus
+  template:
+    metadata:
+      labels:
+        app: omnitidenexus
+    spec:
+      containers:
+      - name: omnitide-core
+        image: your-dockerhub-image/omnitide-core:latest
+        ports:
+        - containerPort: 8080
